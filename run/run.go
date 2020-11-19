@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+var Allsize int // 总文件大小
+var Num int     // 上传文件数
+
 // connect 建立本地与远程的连接，提供用户名和密码，ip和端口号
 func Connect(user, password, host string, port int) (*sftp.Client, error) {
 	var (
@@ -142,8 +145,6 @@ func Producer(ch chan string, localdir string) {
 func Consumer(ch chan string, done chan bool, user, password, host string, port int, remotepath string) {
 	var kb int
 	var akb int
-	var allsize int
-	var num int = 0
 	for {
 		filename, ok := <-ch
 		if ok {
@@ -153,12 +154,17 @@ func Consumer(ch chan string, done chan bool, user, password, host string, port 
 			break
 		}
 		size, spend := CountSizeTime(filename, remotepath, user, password, host, port)
+		Num++
 		kb = size / 1024
 		fmt.Printf("成功上传文件：%s\n使用了：%s\n文件大小为%dKB\n", filename, spend, kb)
-		num++
 		akb += kb
-		allsize = akb / 1024
+		Allsize = akb / 1024
 	}
 	done <- true
-	fmt.Printf("一共上传了%d个文件，总共文件大小为%dM\n", num, allsize)
 }
+
+//------强转类型不适合当前场景，精度损失太大，还是很感谢同事的建议-----
+/*spend = spend[:len(spend)-2]
+spend_float,_ := strconv.ParseFloat(spend,64)
+spend_int := int(spend_float)
+*/
