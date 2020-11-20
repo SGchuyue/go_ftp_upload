@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4e61c65f-7b47-461b-93c0-77bb716a59bd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run/run.go" beforeDir="false" afterPath="$PROJECT_DIR$/run/run.go" afterDir="false" />
@@ -48,6 +47,9 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\12962\go\src\ftp" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\12962\go\src\ftp" />
       <recent name="C:\Users\12962\go\src\ftp\cmd" />
@@ -58,7 +60,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="&quot;加上传速度及完善&quot;" />
-    <option name="LAST_COMMIT_MESSAGE" value="&quot;加上传速度及完善&quot;" />
+    <MESSAGE value="&quot;wav转mp3&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="&quot;wav转mp3&quot;" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -73,10 +76,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="704" y="328" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1605766216751" />
-    <state x="572" y="112" key="CommitChangelistDialog2" timestamp="1605785818948">
+    <state x="572" y="112" key="CommitChangelistDialog2" timestamp="1605852385700">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="572" y="112" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1605785818948" />
+    <state x="572" y="112" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1605852385700" />
     <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1605785911391">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

@@ -14,9 +14,10 @@ import (
 	"time"
 )
 
-var Allsize int // 总文件大小
-var Num int     // 上传文件数
-var Localpath string
+var Allsize int     // 总文件大小
+var Num int         // 上传文件数
+var Ffmpeg string   // 转码二进制文件地址
+var Remotest string // 远程存放文件位置
 
 // connect 建立本地与远程的连接，提供用户名和密码，ip和端口号
 func Connect(user, password, host string, port int) (*sftp.Client, error) {
@@ -50,15 +51,16 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 }
 
 // UploadFile 选择文件上传到服务器中
-func UploadFile(sftpClient *sftp.Client, filename string, remotePath string) (size int) {
+func UploadFile(sftpClient *sftp.Client, filename string, Remotest string) (size int) {
 	logger.Debug("本地上传文件路径为：", filename)
 	srcFile, err := os.Open(filename)
 	if err != nil {
 		logger.Error("打开本地文件路径失败: ", err)
 	}
+	fmt.Println("远程路径为：", Remotest)
 	defer srcFile.Close()
 	var remoteFileName = path.Base(filename)
-	dstFile, err := sftpClient.Create(path.Join(remotePath, remoteFileName))
+	dstFile, err := sftpClient.Create(path.Join(Remotest, remoteFileName))
 	if err != nil {
 		logger.Error("远程文件创建失败: ", err)
 	}
@@ -74,15 +76,16 @@ func UploadFile(sftpClient *sftp.Client, filename string, remotePath string) (si
 }
 
 // CountSizeTime 统计上传一个文件的大小和时间
-func CountSizeTime(filename, remotepath, user, password, host string, port int) (int, string) {
+func CountSizeTime(filename, Remotest, user, password, host string, port int) (int, string) {
 	var result int
+	fmt.Println(Remotest)
 	conn, err := Connect(user, password, host, port)
 	defer conn.Close()
 	if err != nil {
 		logger.Error("与远程建立连接失败：", err)
 	}
 	start := time.Now()
-	result = UploadFile(conn, filename, remotepath)
+	result = UploadFile(conn, filename, Remotest)
 	spend := time.Since(start).String()
 	return result, spend
 }
@@ -118,37 +121,40 @@ func GetAllFiles(hostdir string) (files []string, err error) {
 }
 
 // WavToMp3 实现将wav格式转化为MP3模式
-func WavToMp3(fpath string) string {
+func WavToMp3(fpath, Ffmpeg string) string {
 	dpath := fpath[:len(fpath)-3] + "mp3"
-	//cmdLine := "pscp -pw pwd local_filename user"
-	cmd = exec.Command("cd", Localpath)
-	cmd = exec.Command("ffmpeg", "-i "+fpath+" -b:a 8k -acodec mp3 -ar 8000 -ac 1 "+dpath)
-	err := cmd.Run()
+	cmd := exec.Command(Ffmpeg, "-i", fpath, dpath)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("文件打开失败")
+		logger.Error("输出错误：", err)
 	}
+	logger.Debugf("文件由wav转化mp3成功：", string(out))
 	return dpath
 }
 
 // Producer 生产者管道
-func Producer(ch chan string, localdir string) {
-	Filename, err := GetAllFiles(localdir)
+func Producer(ch chan string, localpath string) {
+	Filename, err := GetAllFiles(localpath)
 	if err != nil {
 		logger.Error("获取所有的.wav文件失败：", err)
 	}
 	for _, file := range Filename {
-		l := len(Localpath)
-		wavfile := file[l+1:]
-		mp3file := WavToMp3(wavfile)
+		mp3file := WavToMp3(file, Ffmpeg)
+		logger.Debug(Ffmpeg)
 		ch <- mp3file
 	}
 	close(ch)
 }
 
 // Consumer 消费者管道
-func Consumer(ch chan string, done chan bool, user, password, host string, port int, remotepath string) {
+func Consumer(ch chan string, done chan bool, user, password, host string, port int, Remotepath string) {
 	var kb int
 	var akb int
+	fmt.Println("请输入远程文件存放的地址:")
+	fmt.Scanln()
+	fmt.Scanf("%s", &Remotepath)
+	fmt.Println("开始自动将文件上传到远程服务器中！")
+	Remotest = Remotepath
 	for {
 		filename, ok := <-ch
 		if ok {
@@ -157,7 +163,7 @@ func Consumer(ch chan string, done chan bool, user, password, host string, port 
 			logger.Error("从管道读取文件发生错误。")
 			break
 		}
-		size, spend := CountSizeTime(filename, remotepath, user, password, host, port)
+		size, spend := CountSizeTime(filename, Remotest, user, password, host, port)
 		Num++
 		kb = size / 1024
 		fmt.Printf("成功上传文件：%s\n使用了：%s\n文件大小为%dKB\n", filename, spend, kb)
@@ -167,8 +173,10 @@ func Consumer(ch chan string, done chan bool, user, password, host string, port 
 	done <- true
 }
 
-//------强转类型不适合当前场景，精度损失太大，还是很感谢同事的建议-----
+//----强转类型不适合当前场景，精度损失太大，还是很感谢同事的建议----
 /*spend = spend[:len(spend)-2]
 spend_float,_ := strconv.ParseFloat(spend,64)
 spend_int := int(spend_float)
+//l := len(Localpath)
+//wavfile := file[l+1:]
 */
