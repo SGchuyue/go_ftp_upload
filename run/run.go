@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 var Allsize int // 总文件大小
 var Num int     // 上传文件数
+var Localpath string
 
 // connect 建立本地与远程的连接，提供用户名和密码，ip和端口号
 func Connect(user, password, host string, port int) (*sftp.Client, error) {
@@ -99,7 +101,7 @@ func GetAllFiles(hostdir string) (files []string, err error) {
 			dirs = append(dirs, hostdir+PthSep+fi.Name())
 			GetAllFiles(hostdir + PthSep + fi.Name())
 		} else { // 获取指定格式
-			ok := strings.HasSuffix(fi.Name(), ".mp3")
+			ok := strings.HasSuffix(fi.Name(), ".wav")
 			if ok {
 				files = append(files, hostdir+PthSep+fi.Name())
 			}
@@ -116,18 +118,17 @@ func GetAllFiles(hostdir string) (files []string, err error) {
 }
 
 // WavToMp3 实现将wav格式转化为MP3模式
-/*func WavToMp3(wavname string) {
-	wav_file := wavname // 需要转换的wav文件
-	mp3_file := "C:\\testftp"  // 转换后mp3文件存放路径
-	cmd := exec.Command("C:\\Users\\12962\\Desktop\\lame.exe", wav_file, mp3_file)
+func WavToMp3(fpath string) string {
+	dpath := fpath[:len(fpath)-3] + "mp3"
+	//cmdLine := "pscp -pw pwd local_filename user"
+	cmd = exec.Command("cd", Localpath)
+	cmd = exec.Command("ffmpeg", "-i "+fpath+" -b:a 8k -acodec mp3 -ar 8000 -ac 1 "+dpath)
 	err := cmd.Run()
 	if err != nil {
-	      log.Fatal("Convert wav to mp3 error. ", err)
-	     return
+		fmt.Println("文件打开失败")
 	}
-	// wav转mp3成功后，如有必要则可删除wav原文件
-	//os.Remove(wav_file)
-}*/
+	return dpath
+}
 
 // Producer 生产者管道
 func Producer(ch chan string, localdir string) {
@@ -136,7 +137,10 @@ func Producer(ch chan string, localdir string) {
 		logger.Error("获取所有的.wav文件失败：", err)
 	}
 	for _, file := range Filename {
-		ch <- file
+		l := len(Localpath)
+		wavfile := file[l+1:]
+		mp3file := WavToMp3(wavfile)
+		ch <- mp3file
 	}
 	close(ch)
 }
